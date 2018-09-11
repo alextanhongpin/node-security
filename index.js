@@ -23,6 +23,15 @@ app.use(helmet.contentSecurityPolicy({
   }
 }))
 
+app.get('/health', (req, res) => {
+  res.status(200).json({
+    healthy: true,
+    version: '0.0.1',
+    buildDate: Date.now(),
+    startAt: Date.now()
+  })
+})
+
 app.get('/', (req, res) => {
   res.status(200).json({
     message: 'hello world'
@@ -52,6 +61,16 @@ app.use(cookieParser())
 
 const port = 3000
 
-app.listen(port, () => {
+const server = app.listen(port, () => {
   console.log(`listening to port*: ${port}. press ctrl + c to cancel.`)
+})
+
+process.on('SIGTERM', () => {
+  console.info('SIGTERM signal received.')
+  console.log('closing http server...')
+  server.close(() => {
+    console.log('http server closed.')
+    // Close db, etc
+    process.exit(0)
+  })
 })
